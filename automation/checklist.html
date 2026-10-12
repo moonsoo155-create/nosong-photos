@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b8fd6">
+<title>청소 체크리스트 · NOSONG</title>
+<style>
+  :root{--brand:#2b8fd6; --brand2:#59d0f0; --bg:#f1f9fe; --card:#fff;
+    --ink:#122230; --sub:#5b7284; --line:#d6e9f5; --ok:#1aa65a;}
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#09141c; --card:#122230; --ink:#e8f3fb; --sub:#8fabbf; --line:#243f52;}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;}
+  .top{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .top a{color:#fff;text-decoration:none;font-size:20px;} .top h1{margin:0;font-size:17px;font-weight:800;}
+  .wrap{max-width:620px;margin:0 auto;padding:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .seg{display:flex;gap:8px;margin-bottom:14px;}
+  .seg button{flex:1;padding:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;font-weight:800;cursor:pointer;}
+  .seg button.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .prog{height:12px;background:var(--line);border-radius:999px;overflow:hidden;margin:4px 0 2px;}
+  .prog>div{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));width:0;transition:.3s;}
+  .pct{font-size:13px;font-weight:800;color:var(--brand);text-align:right;}
+  .group{font-size:13px;font-weight:800;color:var(--sub);margin:16px 0 6px;}
+  .item{display:flex;align-items:center;gap:12px;padding:12px 8px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .item:last-child{border:none;}
+  .box{width:24px;height:24px;border:2px solid var(--line);border-radius:7px;flex:none;display:grid;place-items:center;font-size:15px;color:#fff;}
+  .item.done .box{background:var(--ok);border-color:var(--ok);}
+  .item.done .txt{text-decoration:line-through;color:var(--sub);}
+  .txt{font-size:15px;flex:1;}
+  .delx{border:none;background:none;color:#c66;font-size:16px;cursor:pointer;opacity:.5;}
+  .add{display:flex;gap:8px;margin-top:10px;}
+  .add input{flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:14px;}
+  .add button{padding:10px 14px;border:none;border-radius:10px;background:var(--brand);color:#fff;font-weight:800;cursor:pointer;}
+  .btn{width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;background:var(--card);color:var(--brand);border:1.5px solid var(--brand);}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#122230;color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;z-index:9;}
+  .toast.show{opacity:1;}
+  .done-banner{background:#e4f8ec;border:1px solid #b6e6c8;color:#1a7a44;border-radius:12px;padding:12px;text-align:center;font-weight:800;margin-top:12px;display:none;}
+  @media (prefers-color-scheme:dark){.done-banner{background:#13311f;border-color:#235c3a;color:#6ee3a0;}}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">←</a><h1>🧹 청소·세팅 체크리스트</h1></div>
+<div class="wrap">
+  <div class="seg" id="segHouse">
+    <button data-h="mansion" class="on">노송맨숀</button>
+    <button data-h="villa">노송별장</button>
+  </div>
+
+  <div class="card">
+    <div class="pct" id="pct">0%</div>
+    <div class="prog"><div id="bar"></div></div>
+    <div class="done-banner" id="banner">✨ 세팅 완료! 게스트 맞을 준비 끝</div>
+    <div id="list"></div>
+    <div class="add">
+      <input id="newItem" placeholder="항목 직접 추가 (예: 수건 6장 비치)">
+      <button id="addBtn">추가</button>
+    </div>
+  </div>
+
+  <button class="btn" id="reset">전부 체크 해제 (다음 청소 시작) 🔄</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var DEFAULTS={
+ mansion:[
+  ["침실/침구",["침대 시트·커버 교체","베개·이불 정리","머리카락 꼼꼼히 제거"]],
+  ["욕실",["변기·세면대·거울 청소","수건 교체(인원수+여유)","샴푸·바디워시 리필","배수구 머리카락 제거"]],
+  ["주방",["설거지·싱크대 정리","쓰레기통 비우기","커피·티·생수 비치","인덕션·전자레인지 닦기"]],
+  ["거실/감성 세팅",["바닥 청소기+물걸레","소품·조명 제자리","무드등·디퓨저 체크","창문·거울 얼룩 제거"]],
+  ["소모품/마감",["휴지·물티슈 채우기","도어락 비번 변경","에어컨/보일러 적정온도","쓰레기 분리수거 배출","사진과 동일한지 최종 점검"]]
+ ],
+ villa:[
+  ["침실/침구",["침대 시트·커버 교체","베개·이불 정리","머리카락 제거"]],
+  ["욕실",["변기·세면대·거울 청소","수건 교체","샴푸·바디워시 리필","아이 욕실용품 체크"]],
+  ["주방",["설거지·싱크대 정리","쓰레기통 비우기","생수·간식 비치","식기·컵 소독"]],
+  ["키즈존(핵심)",["놀이방 장난감 소독·정리","트램폴린 안전·청결 점검","모서리 안전가드 확인","놀이매트 청소"]],
+  ["거실/마감",["바닥 청소기+물걸레","아이 위험물 치우기","도어락 비번 변경","분리수거 배출","사진과 동일한지 최종 점검"]]
+ ]
+};
+var KEY="nosong_checklist_v1";
+var house="mansion";
+function store(){try{return JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){return {};}}
+function saveStore(o){localStorage.setItem(KEY,JSON.stringify(o));}
+function getData(){
+  var s=store();
+  if(!s[house]){ // init from defaults
+    s[house]=DEFAULTS[house].map(function(g){return {group:g[0],items:g[1].map(function(t){return {t:t,done:false};})};});
+    saveStore(s);
+  }
+  return s[house];
+}
+function setData(d){var s=store();s[house]=d;saveStore(s);}
+
+function render(){
+  var d=getData();
+  var box=document.getElementById('list');box.innerHTML="";
+  var total=0,done=0;
+  d.forEach(function(g,gi){
+    var gl=document.createElement('div');gl.className="group";gl.textContent="◆ "+g.group;box.appendChild(gl);
+    g.items.forEach(function(it,ii){
+      total++; if(it.done)done++;
+      var row=document.createElement('div');row.className="item"+(it.done?" done":"");
+      row.innerHTML='<div class="box">'+(it.done?"✓":"")+'</div><div class="txt"></div><button class="delx">✕</button>';
+      row.querySelector('.txt').textContent=it.t;
+      row.onclick=function(e){if(e.target.classList.contains('delx'))return;
+        it.done=!it.done;setData(d);render();};
+      row.querySelector('.delx').onclick=function(e){e.stopPropagation();
+        g.items.splice(ii,1);setData(d);render();};
+      box.appendChild(row);
+    });
+  });
+  var pct=total?Math.round(done/total*100):0;
+  document.getElementById('bar').style.width=pct+"%";
+  document.getElementById('pct').textContent=pct+"% ("+done+"/"+total+")";
+  document.getElementById('banner').style.display=(total&&done===total)?"block":"none";
+}
+document.getElementById('segHouse').addEventListener('click',function(e){
+  if(e.target.tagName!=='BUTTON')return;
+  [].forEach.call(this.children,function(b){b.classList.remove('on');});
+  e.target.classList.add('on');house=e.target.dataset.h;render();
+});
+document.getElementById('addBtn').onclick=function(){
+  var t=document.getElementById('newItem').value.trim();if(!t)return;
+  var d=getData();d[d.length-1].items.push({t:t,done:false});setData(d);
+  document.getElementById('newItem').value="";render();
+};
+document.getElementById('newItem').addEventListener('keydown',function(e){if(e.key==="Enter")document.getElementById('addBtn').click();});
+document.getElementById('reset').onclick=function(){
+  var d=getData();d.forEach(function(g){g.items.forEach(function(it){it.done=false;});});setData(d);render();
+  var t=document.getElementById('toast');t.textContent="체크 해제됨 🔄";t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1500);
+};
+render();
+</script>
+</body>
+</html>

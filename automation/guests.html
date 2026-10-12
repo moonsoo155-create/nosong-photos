@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5a6676">
+<title>게스트 CRM · NOSONG</title>
+<style>
+  :root{--brand:#5a6676; --brand2:#8a94a6; --bg:#f3f5f8; --card:#fff;
+    --ink:#1a2230; --sub:#67727f; --line:#e1e6ee; --ok:#1aa65a; --star:#ffb400;}
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0e131a; --card:#19212c; --ink:#eef2f8; --sub:#9aa6b4; --line:#2a3340;}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;}
+  .top{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .top a{color:#fff;text-decoration:none;font-size:20px;} .top h1{margin:0;font-size:17px;font-weight:800;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+  label{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:10px 0 5px;}
+  input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:15px;font-family:inherit;}
+  textarea{min-height:52px;resize:vertical;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn{width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;background:var(--brand);color:#fff;}
+  .btn.sec{background:var(--card);color:var(--brand);border:1.5px solid var(--brand);}
+  .stars{display:flex;gap:4px;font-size:24px;cursor:pointer;}
+  .stars span{color:var(--line);} .stars span.on{color:var(--star);}
+  .search{display:flex;gap:8px;margin-bottom:12px;}
+  .search input{flex:1;}
+  .g{border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:10px;background:var(--bg);}
+  .g .h{display:flex;justify-content:space-between;align-items:center;}
+  .g .nm{font-size:16px;font-weight:800;}
+  .g .re{font-size:11px;font-weight:800;color:#fff;background:var(--ok);padding:2px 8px;border-radius:999px;}
+  .g .meta{font-size:12.5px;color:var(--sub);margin-top:4px;}
+  .g .memo{font-size:13.5px;margin-top:6px;white-space:pre-wrap;}
+  .g .act{display:flex;gap:8px;margin-top:8px;}
+  .g .act button{flex:1;padding:7px;border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+  .st{font-size:14px;color:var(--star);}
+  .empty{text-align:center;color:var(--sub);padding:24px;font-size:14px;}
+  .count{font-size:12px;color:var(--sub);margin-bottom:8px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a2230;color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;z-index:9;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">←</a><h1>📇 게스트 CRM</h1></div>
+<div class="wrap">
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:800;margin-bottom:4px;" id="formTitle">새 게스트 기록</div>
+    <div class="grid2">
+      <div><label>이름/호칭</label><input id="name" placeholder="예: 김민수"></div>
+      <div><label>연락/닉네임(선택)</label><input id="contact" placeholder="예: 에어비앤비 닉"></div>
+    </div>
+    <div class="grid2">
+      <div><label>숙소</label><select id="house"><option>노송맨숀</option><option>노송별장</option></select></div>
+      <div><label>채널</label><select id="chan"><option>에어비앤비</option><option>네이버예약</option><option>직접예약</option><option>기타</option></select></div>
+    </div>
+    <div class="grid2">
+      <div><label>체크인</label><input type="date" id="cin"></div>
+      <div><label>체크아웃</label><input type="date" id="cout"></div>
+    </div>
+    <label>만족도</label>
+    <div class="stars" id="stars"><span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span></div>
+    <label>메모 (특이사항·선호·재방문 가능성 등)</label>
+    <textarea id="memo" placeholder="예: 조용한 거 선호 / 주차 2대 / 아이 2명 / 재방문 의사 있음"></textarea>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+      <input type="checkbox" id="returning" style="width:auto;"> 재방문 게스트
+    </label>
+    <div class="grid2" style="margin-top:12px;">
+      <button class="btn" id="save">저장</button>
+      <button class="btn sec" id="cancel" style="display:none;">취소</button>
+    </div>
+  </div>
+
+  <div class="search">
+    <input id="q" placeholder="🔍 이름·메모·채널 검색">
+    <button class="btn sec" id="csv" style="width:auto;padding:0 14px;">CSV</button>
+  </div>
+  <div class="count" id="count"></div>
+  <div id="list"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var KEY="nosong_guests_v1";
+var editId=null, rating=0;
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]");}catch(e){return [];}}
+function save(a){localStorage.setItem(KEY,JSON.stringify(a));}
+function v(id){return (document.getElementById(id).value||"").trim();}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1500);}
+
+/* stars */
+document.getElementById('stars').addEventListener('click',function(e){
+  if(e.target.tagName!=='SPAN')return;rating=+e.target.dataset.v;paintStars();});
+function paintStars(){[].forEach.call(document.getElementById('stars').children,function(s){
+  s.classList.toggle('on',+s.dataset.v<=rating);});}
+
+function clearForm(){
+  editId=null;rating=0;paintStars();
+  ['name','contact','cin','cout','memo'].forEach(function(id){document.getElementById(id).value="";});
+  document.getElementById('returning').checked=false;
+  document.getElementById('formTitle').textContent="새 게스트 기록";
+  document.getElementById('cancel').style.display="none";
+  document.getElementById('save').textContent="저장";
+}
+document.getElementById('cancel').onclick=clearForm;
+
+document.getElementById('save').onclick=function(){
+  if(!v('name')){toast("이름을 넣어주세요");return;}
+  var a=load();
+  var rec={id:editId||Date.now(),name:v('name'),contact:v('contact'),house:v('house'),chan:v('chan'),
+    cin:v('cin'),cout:v('cout'),rating:rating,memo:v('memo'),returning:document.getElementById('returning').checked};
+  if(editId){a=a.map(function(r){return r.id===editId?rec:r;});} else a.unshift(rec);
+  save(a);clearForm();render();toast("저장됐어요 ✅");
+};
+
+function render(){
+  var q=v('q').toLowerCase();
+  var a=load().filter(function(r){
+    if(!q)return true;
+    return (r.name+r.memo+r.chan+r.house+r.contact).toLowerCase().indexOf(q)>=0;
+  });
+  document.getElementById('count').textContent="총 "+load().length+"명"+(q?(" · 검색결과 "+a.length+"명"):"");
+  var box=document.getElementById('list');
+  if(a.length===0){box.innerHTML='<div class="empty">아직 기록이 없어요. 위에서 첫 게스트를 추가해 보세요.</div>';return;}
+  box.innerHTML="";
+  a.forEach(function(r){
+    var el=document.createElement('div');el.className="g";
+    var stars=r.rating?('<span class="st">'+"★".repeat(r.rating)+'</span>'):"";
+    var dates=(r.cin||r.cout)?((r.cin||"?")+" ~ "+(r.cout||"?")):"";
+    el.innerHTML=
+      '<div class="h"><span class="nm">'+esc(r.name)+(r.contact?' <span style="font-size:12px;color:var(--sub);font-weight:500">('+esc(r.contact)+')</span>':'')+'</span>'+
+      (r.returning?'<span class="re">재방문</span>':'')+'</div>'+
+      '<div class="meta">'+esc(r.house)+' · '+esc(r.chan)+(dates?(' · '+dates):'')+' '+stars+'</div>'+
+      (r.memo?'<div class="memo">'+esc(r.memo)+'</div>':'')+
+      '<div class="act"><button data-e="'+r.id+'">✏️ 수정</button><button data-d="'+r.id+'">🗑 삭제</button></div>';
+    box.appendChild(el);
+  });
+  [].forEach.call(box.querySelectorAll('[data-e]'),function(b){b.onclick=function(){edit(+b.dataset.e);};});
+  [].forEach.call(box.querySelectorAll('[data-d]'),function(b){b.onclick=function(){
+    if(confirm("이 게스트 기록을 삭제할까요?")){save(load().filter(function(r){return r.id!==+b.dataset.d;}));render();toast("삭제됨");}};});
+}
+function edit(id){
+  var r=load().filter(function(x){return x.id===id;})[0];if(!r)return;
+  editId=id;rating=r.rating||0;paintStars();
+  document.getElementById('name').value=r.name;document.getElementById('contact').value=r.contact||"";
+  document.getElementById('house').value=r.house;document.getElementById('chan').value=r.chan;
+  document.getElementById('cin').value=r.cin||"";document.getElementById('cout').value=r.cout||"";
+  document.getElementById('memo').value=r.memo||"";document.getElementById('returning').checked=!!r.returning;
+  document.getElementById('formTitle').textContent="게스트 기록 수정";
+  document.getElementById('cancel').style.display="";document.getElementById('save').textContent="수정 저장";
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function esc(s){return (s+"").replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];});}
+document.getElementById('q').addEventListener('input',render);
+document.getElementById('csv').onclick=function(){
+  var a=load();if(!a.length){toast("내보낼 기록이 없어요");return;}
+  var head="이름,닉네임,숙소,채널,체크인,체크아웃,만족도,재방문,메모\n";
+  var body=a.map(function(r){return [r.name,r.contact,r.house,r.chan,r.cin,r.cout,r.rating,(r.returning?"Y":""),'"'+(r.memo||"").replace(/"/g,'""')+'"'].join(",");}).join("\n");
+  var blob=new Blob(["﻿"+head+body],{type:"text/csv;charset=utf-8"});
+  var url=URL.createObjectURL(blob);var el=document.createElement('a');el.href=url;el.download="노송_게스트.csv";
+  document.body.appendChild(el);el.click();el.remove();URL.revokeObjectURL(url);toast("CSV 저장됨 📄");
+};
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1aa65a">
+<title>게스트 메시지 · NOSONG</title>
+<style>
+  :root{--brand:#1aa65a; --brand2:#3ed07a; --bg:#f4faf6; --card:#fff;
+    --ink:#182218; --sub:#5b6b60; --line:#dcebe1;}
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0e1611; --card:#16221b; --ink:#eef6f0; --sub:#9ab3a4; --line:#263b2e;}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;}
+  .top{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .top a{color:#fff;text-decoration:none;font-size:20px;} .top h1{margin:0;font-size:17px;font-weight:800;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+  label{display:block;font-size:13px;font-weight:700;color:var(--sub);margin:12px 0 6px;}
+  label:first-child{margin-top:0;}
+  input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;
+    background:var(--bg);color:var(--ink);font-size:15px;font-family:inherit;}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg button{flex:1;min-width:120px;padding:11px;border:1.5px solid var(--line);background:var(--bg);
+    color:var(--ink);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;}
+  .seg button.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .stages{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .stages button{padding:12px 10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);
+    border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;text-align:left;}
+  .stages button.on{background:#e4f6ec;border-color:var(--brand);color:var(--brand);}
+  @media (prefers-color-scheme:dark){.stages button.on{background:#1c3a29;}}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn{width:100%;padding:15px;border:none;border-radius:13px;font-size:16px;font-weight:800;cursor:pointer;background:var(--brand);color:#fff;}
+  .btn.sec{background:var(--card);color:var(--brand);border:1.5px solid var(--brand);}
+  .out{white-space:pre-wrap;word-break:break-word;font-size:15px;line-height:1.75;background:var(--bg);
+    border:1px dashed var(--line);border-radius:12px;padding:14px;min-height:60px;}
+  .hint{font-size:12px;color:var(--sub);margin-top:8px;}
+  .warnbox{background:#fff6e5;border:1px solid #f0d9a8;color:#7a5a1e;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:10px;}
+  @media (prefers-color-scheme:dark){.warnbox{background:#2a2412;border-color:#4a3f1c;color:#e0c98a;}}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#182218;color:#fff;
+    padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;z-index:9;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">←</a><h1>💬 게스트 메시지 작성기</h1></div>
+<div class="wrap">
+
+  <div class="card">
+    <label>숙소</label>
+    <div class="seg" id="segHouse">
+      <button data-h="mansion" class="on">노송맨숀</button>
+      <button data-h="villa">노송별장</button>
+    </div>
+    <label>메시지 단계</label>
+    <div class="stages" id="stages"></div>
+  </div>
+
+  <div class="card">
+    <label>게스트 이름/호칭</label>
+    <input id="name" placeholder="예: 김민수">
+    <div class="grid2">
+      <div><label>체크인 날짜</label><input id="cin" placeholder="예: 10/18(토)"></div>
+      <div><label>체크아웃 날짜</label><input id="cout" placeholder="예: 10/19(일)"></div>
+    </div>
+    <label>인원</label>
+    <input id="pax" placeholder="예: 2명">
+
+    <label>저장되는 숙소 정보 <span style="font-weight:500;color:var(--sub)">(한 번 입력하면 이 기기에 기억돼요)</span></label>
+    <div class="grid2">
+      <div><input id="door" placeholder="도어락 비번 예: 1234*"></div>
+      <div><input id="wifi" placeholder="와이파이 예: nosong / pw1234"></div>
+    </div>
+    <div class="grid2" style="margin-top:10px;">
+      <div><input id="park" placeholder="주차 안내"></div>
+      <div><input id="addr" placeholder="주소/찾아오는 길"></div>
+    </div>
+  </div>
+
+  <button class="btn" id="gen" style="margin-bottom:14px;">메시지 만들기 ✍️</button>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-size:13px;font-weight:700;color:var(--sub)">생성된 메시지 (초안)</span>
+    </div>
+    <div class="out" id="out">단계를 고르고 '메시지 만들기'를 누르세요.</div>
+    <div class="grid2" style="margin-top:12px;">
+      <button class="btn" id="copy">복사 📋</button>
+      <button class="btn sec" id="save">정보 저장 💾</button>
+    </div>
+    <div class="warnbox">⚠️ 이 도구는 <b>초안만</b> 만듭니다. 복사해서 직접 확인 후 보내세요.
+    자동 발송은 하지 않습니다. 도어락 비번 등 민감정보는 이 기기 브라우저에만 저장됩니다.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var HOUSE={mansion:{name:"노송맨숀",emoji:"🏠",sign:"노송맨숀 호스트 드림"},
+           villa:{name:"노송별장",emoji:"🌿",sign:"노송별장 호스트 드림"}};
+var state={house:"mansion",stage:"confirm"};
+var STAGES=[
+  ["confirm","① 예약 확정"],
+  ["before","② 체크인 전날 안내"],
+  ["checkin","③ 체크인 당일"],
+  ["checkout","④ 체크아웃 안내"],
+  ["after","⑤ 체크아웃 후 + 리뷰요청"]
+];
+var SKEY="nosong_msg_info";
+
+function v(id){return (document.getElementById(id).value||"").trim();}
+function g(id){return v(id)|| "{"+id+"}";}
+function nameOf(){var n=v('name');return n?n+" 님":"게스트님";}
+
+function tmpl(){
+  var h=HOUSE[state.house], nm=nameOf();
+  var cin=v('cin')||"체크인 당일", cout=v('cout')||"체크아웃일";
+  var door=v('door'), wifi=v('wifi'), park=v('park'), addr=v('addr');
+  var pax=v('pax');
+  var T={};
+
+  T.confirm=
+nm+", 안녕하세요 😊\n"+
+h.name+" 예약해 주셔서 진심으로 감사합니다.\n\n"+
+"▪ 체크인: "+cin+" (오후 3시부터)\n"+
+"▪ 체크아웃: "+cout+" (오전 11시까지)\n"+
+(pax?("▪ 인원: "+pax+"\n"):"")+
+"\n오시기 전에 궁금하신 점이나 필요하신 게 있으시면 언제든 편하게 말씀해 주세요.\n"+
+"정성껏 준비해 두고 기다리겠습니다. 🙏\n\n"+
+"- "+h.sign;
+
+  T.before=
+nm+", 내일 드디어 뵙네요 😊\n"+
+h.name+" 체크인 안내 미리 보내드려요.\n\n"+
+"📍 찾아오는 길\n"+(addr||"(주소/길 안내)")+"\n\n"+
+"🅿 주차\n"+(park||"(주차 안내)")+"\n\n"+
+"🔑 입실은 "+cin+" 오후 3시부터 가능합니다.\n"+
+"도착하시기 30분 전쯤 메시지 한 번 주시면 더 편하게 안내해 드릴게요.\n\n"+
+"오시는 길 조심히 오세요! 🚗\n\n- "+h.sign;
+
+  T.checkin=
+nm+", 오시느라 고생 많으셨어요 😊\n\n"+
+"🔑 도어락 비밀번호\n"+(door||"(비번)")+"\n\n"+
+"📶 와이파이\n"+(wifi||"(와이파이 정보)")+"\n\n"+
+"편하게 쉬시다가 불편한 점이나 필요한 게 있으면 바로 연락 주세요. 바로 도와드리겠습니다.\n"+
+"오늘 하루 "+h.name+"에서 푹 쉬어 가세요 🌙\n\n- "+h.sign;
+
+  T.checkout=
+nm+", 벌써 체크아웃 날이네요 🥹\n\n"+
+"체크아웃은 "+cout+" 오전 11시까지예요.\n"+
+"특별히 정리하실 건 없고, 사용하신 그대로 두고 나가 주시면 됩니다.\n"+
+"▪ 창문/가스 확인 후 도어락 닫고 나가 주세요.\n"+
+"▪ 분리수거는 입구 쪽에 부탁드려요 🙏\n\n"+
+"머무시는 동안 편하셨길 바라요. 남은 여정도 안전하게 보내세요!\n\n- "+h.sign;
+
+  // ⑤ 작별 + 리뷰요청 통합 (도메인 규칙)
+  T.after=
+nm+", "+h.name+"에서 좋은 시간 보내셨나요? 😊\n"+
+"짧은 시간이었지만 "+nm+"과 함께해서 저도 즐거웠습니다.\n\n"+
+"혹시 머무시면서 좋았던 점이 있으셨다면, 다른 분들도 참고하실 수 있게\n"+
+"리뷰로 한마디 남겨 주시면 저에게 정말 큰 힘이 됩니다 🙏\n"+
+"(부담 갖지 않으셔도 괜찮아요!)\n\n"+
+"전주에 또 오실 일이 있으면 언제든 편하게 찾아 주세요.\n"+
+"그때도 정성껏 준비해 두고 기다리겠습니다. 다음에 또 뵙기를 바랄게요 🌿\n\n- "+h.sign;
+
+  return T[state.stage];
+}
+
+/* UI */
+function renderStages(){
+  var box=document.getElementById('stages');box.innerHTML="";
+  STAGES.forEach(function(s){
+    var b=document.createElement('button');b.textContent=s[1];b.dataset.s=s[0];
+    if(s[0]===state.stage)b.classList.add('on');
+    b.onclick=function(){state.stage=s[0];renderStages();};
+    box.appendChild(b);
+  });
+}
+document.getElementById('segHouse').addEventListener('click',function(e){
+  if(e.target.tagName!=='BUTTON')return;
+  [].forEach.call(this.children,function(b){b.classList.remove('on');});
+  e.target.classList.add('on');state.house=e.target.dataset.h;
+});
+document.getElementById('gen').onclick=function(){
+  document.getElementById('out').textContent=tmpl();
+};
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},1500);}
+document.getElementById('copy').onclick=function(){
+  var t=document.getElementById('out').textContent;
+  if(!t||t.length<15){toast("먼저 메시지를 만드세요");return;}
+  navigator.clipboard.writeText(t).then(function(){toast("복사됐어요 📋");},function(){
+    var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');ta.remove();toast("복사됐어요 📋");});
+};
+/* 저장/복원: 숙소 공통 정보만 (게스트 개인정보는 저장 안 함) */
+function saveInfo(){
+  var o={door:v('door'),wifi:v('wifi'),park:v('park'),addr:v('addr')};
+  try{localStorage.setItem(SKEY,JSON.stringify(o));toast("숙소 정보 저장됨 💾");}catch(e){toast("저장 실패");}
+}
+function loadInfo(){
+  try{var o=JSON.parse(localStorage.getItem(SKEY)||"{}");
+    ["door","wifi","park","addr"].forEach(function(k){if(o[k])document.getElementById(k).value=o[k];});
+  }catch(e){}
+}
+document.getElementById('save').onclick=saveInfo;
+renderStages();loadInfo();
+</script>
+</body>
+</html>

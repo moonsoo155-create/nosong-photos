@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffa021">
+<title>리뷰 답글 · NOSONG</title>
+<style>
+  :root{--brand:#e8890a; --brand2:#ffb400; --bg:#fff9ef; --card:#fff;
+    --ink:#2a2112; --sub:#7a6b50; --line:#f0e3c8;}
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#161108; --card:#221a0e; --ink:#f6eede; --sub:#bba982; --line:#3a2e18;}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;}
+  .top{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .top a{color:#fff;text-decoration:none;font-size:20px;} .top h1{margin:0;font-size:17px;font-weight:800;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+  label{display:block;font-size:13px;font-weight:700;color:var(--sub);margin:12px 0 6px;} label:first-child{margin-top:0;}
+  input,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);font-size:15px;font-family:inherit;}
+  textarea{min-height:110px;resize:vertical;}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg button{flex:1;min-width:84px;padding:11px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;}
+  .seg button.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .btn{width:100%;padding:15px;border:none;border-radius:13px;font-size:16px;font-weight:800;cursor:pointer;background:var(--brand);color:#fff;}
+  .btn.sec{background:var(--card);color:var(--brand);border:1.5px solid var(--brand);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .out{white-space:pre-wrap;word-break:break-word;font-size:15px;line-height:1.75;background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:14px;min-height:60px;}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .tag{font-size:11.5px;padding:4px 9px;border-radius:999px;background:#ffeccb;color:#9a6a12;font-weight:700;}
+  @media (prefers-color-scheme:dark){.tag{background:#3a2c12;color:#e8bf72;}}
+  .hint{font-size:12px;color:var(--sub);margin-top:8px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2a2112;color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;z-index:9;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">←</a><h1>⭐ 리뷰 답글 생성기</h1></div>
+<div class="wrap">
+  <div class="card">
+    <label>숙소</label>
+    <div class="seg" id="segHouse">
+      <button data-h="mansion" class="on">노송맨숀</button>
+      <button data-h="villa">노송별장</button>
+    </div>
+    <label>평점</label>
+    <div class="seg" id="segStar">
+      <button data-v="5" class="on">★5</button>
+      <button data-v="4">★4</button>
+      <button data-v="3">★3 이하</button>
+    </div>
+    <div class="grid2">
+      <div><label>게스트 이름</label><input id="name" placeholder="예: 지연"></div>
+      <div><label>(선택) 직접 넣을 포인트</label><input id="hook" placeholder="예: 노을 사진"></div>
+    </div>
+    <label>게스트가 남긴 리뷰 (붙여넣기)</label>
+    <textarea id="review" placeholder="게스트 리뷰 내용을 그대로 붙여넣으세요. 내용을 분석해 맞춤 답글을 만듭니다."></textarea>
+    <div class="tags" id="detected"></div>
+  </div>
+
+  <button class="btn" id="gen" style="margin-bottom:14px;">답글 만들기 ✍️</button>
+
+  <div class="card">
+    <span style="font-size:13px;font-weight:700;color:var(--sub)">답글 (초안)</span>
+    <div class="out" id="out" style="margin-top:8px;">리뷰를 붙여넣고 '답글 만들기'를 누르세요.</div>
+    <div class="grid2" style="margin-top:12px;">
+      <button class="btn" id="copy">복사 📋</button>
+      <button class="btn sec" id="regen">다른 문장 🔁</button>
+    </div>
+    <div class="hint">※ 초안입니다. 게스트 이름·구체적 표현을 한 번 확인하고 직접 등록하세요.
+    별점 3 이하(아쉬운 리뷰)는 사과·개선 약속 톤으로 바뀝니다.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var HOUSE={mansion:{name:"노송맨숀"},villa:{name:"노송별장"}};
+var state={house:"mansion",star:"5"};
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function v(id){return (document.getElementById(id).value||"").trim();}
+
+/* 키워드 → 반응 문장 */
+var TOPICS=[
+ {k:["깨끗","청결","정돈","깔끔","위생"],label:"청결",
+  r:["청결에 특히 신경 쓰는 편인데 알아봐 주셔서 정말 감사해요.",
+     "깨끗하게 느껴지셨다니 청소하며 들인 정성이 보람으로 돌아오네요."]},
+ {k:["사진","감성","예쁘","인테리어","소품","분위기","감성적"],label:"감성/사진",
+  r:["공간 하나하나 신경 써서 꾸몄는데 예쁘게 봐 주셔서 기뻐요.",
+     "감성 있게 느껴지셨다니 준비한 보람이 있네요."]},
+ {k:["위치","가까","교통","주차","찾기"],label:"위치/주차",
+  r:["위치가 편하셨다니 다행이에요.",
+     "오시고 둘러보기 편한 자리라 저도 늘 추천드리는 부분이에요."]},
+ {k:["친절","응대","연락","배려","세심","답장"],label:"친절/응대",
+  r:["편하게 응대해 드리려 했는데 좋게 봐 주셔서 감사해요.",
+     "작은 문의에도 편히 연락 주셔서 저도 즐거웠습니다."]},
+ {k:["조용","편안","쉬","힐링","휴식","아늑"],label:"휴식/조용",
+  r:["푹 쉬다 가셨다니 그게 제일 큰 보람이에요.",
+     "편안하게 머무셨다니 마음이 놓이네요."]},
+ {k:["아이","아기","가족","키즈","놀이","트램폴린"],label:"아이/가족",
+  r:["아이가 좋아했다니 저도 덩달아 기분이 좋네요 🥰",
+     "가족분들이 편하게 즐기셨다니 준비한 보람이 있어요."]},
+ {k:["뷰","전망","노을","풍경","야경"],label:"뷰/풍경",
+  r:["그 풍경 좋아해 주셔서 감사해요. 시간대마다 또 다른 매력이 있답니다.",
+     "뷰를 마음에 들어 하셔서 기뻐요."]},
+ {k:["재방문","또","다음","추천"],label:"재방문의사",
+  r:["또 찾아 주신다니 정말 감사해요. 그때 더 좋게 준비해 둘게요.",
+     "추천해 주신다니 큰 힘이 됩니다 🙏"]}
+];
+var NEG=[
+ {k:["아쉽","불편","춥","덥","소음","시끄","냄새","벌레","고장","좁","지저분","실망","별로"],label:"아쉬운 점"}];
+
+function detect(text){
+  var hit=[],neg=[];
+  TOPICS.forEach(function(t){ if(t.k.some(function(w){return text.indexOf(w)>=0;})) hit.push(t); });
+  NEG.forEach(function(t){ if(t.k.some(function(w){return text.indexOf(w)>=0;})) neg.push(t.label); });
+  return {hit:hit,neg:neg};
+}
+function showTags(d){
+  var box=document.getElementById('detected');box.innerHTML="";
+  d.hit.forEach(function(t){var s=document.createElement('span');s.className="tag";s.textContent="#"+t.label;box.appendChild(s);});
+  d.neg.forEach(function(l){var s=document.createElement('span');s.className="tag";s.style.background="#ffd9d9";s.style.color="#a33";s.textContent="⚠ "+l;box.appendChild(s);});
+}
+
+function build(){
+  var h=HOUSE[state.house], text=v('review'), nm=v('name');
+  var greet= nm? (nm+" 님,") : "게스트님,";
+  var d=detect(text); showTags(d);
+  var body=[];
+
+  if(state.star==="3"){
+    // 아쉬운 리뷰 — 사과/개선 톤
+    body.push(greet+" 먼저 소중한 시간 내어 솔직한 후기 남겨 주셔서 감사합니다.");
+    body.push(pick([
+      "기대만큼 편안하게 모시지 못한 것 같아 진심으로 죄송한 마음이에요.",
+      "불편을 드린 부분이 있었다니 호스트로서 많이 죄송합니다."]));
+    if(v('hook')) body.push("말씀해 주신 '"+v('hook')+"' 부분은 바로 점검해서 개선하겠습니다.");
+    else if(d.neg.length) body.push("말씀해 주신 부분은 흘려듣지 않고 꼭 점검해 개선하겠습니다.");
+    body.push(pick([
+      "덕분에 더 나은 공간으로 만들 수 있을 것 같아요. 다음에 기회가 된다면 더 편안하게 모시고 싶습니다.",
+      "다음엔 꼭 만족하실 수 있게 준비해 두겠습니다. 다시 한번 죄송하고, 감사합니다."]));
+  } else {
+    // 긍정 리뷰
+    body.push(greet+" "+pick([h.name+"에서 좋은 시간 보내셨다니 정말 기뻐요 😊",
+      "따뜻한 후기 남겨 주셔서 진심으로 감사합니다 😊"]));
+    if(v('hook')) body.push("특히 '"+v('hook')+"' 좋게 봐 주셔서 더 감사해요.");
+    // 감지된 주제별 반응 (최대 2개)
+    var picks=d.hit.slice(0,2);
+    if(picks.length===0){
+      body.push(pick(["짧게나마 편히 쉬다 가셨길 바라요.","좋게 봐 주신 마음 오래 기억할게요."]));
+    } else {
+      picks.forEach(function(t){ body.push(pick(t.r)); });
+    }
+    if(state.star==="5") body.push(pick(["별점까지 꽉 채워 주셔서 큰 힘이 됐어요 🙏","남겨 주신 별 하나하나가 큰 응원이 됩니다 🙏"]));
+    // 재방문 초대 (항상 마무리)
+    body.push(pick([
+      "전주 다시 오실 일 있으면 언제든 편하게 찾아 주세요. 그때 더 정성껏 준비해 두고 기다리겠습니다 🌿",
+      "또 뵐 날을 기다릴게요. 다음에도 편안하게 모시겠습니다 🌿"]));
+  }
+  return body.join("\n\n");
+}
+
+/* UI */
+function segBind(id,key){
+  document.getElementById(id).addEventListener('click',function(e){
+    if(e.target.tagName!=='BUTTON')return;
+    [].forEach.call(this.children,function(b){b.classList.remove('on');});
+    e.target.classList.add('on'); state[key]=e.target.dataset.h||e.target.dataset.v;
+  });
+}
+segBind('segHouse','house'); segBind('segStar','star');
+document.getElementById('gen').onclick=function(){document.getElementById('out').textContent=build();};
+document.getElementById('regen').onclick=function(){document.getElementById('out').textContent=build();};
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1500);}
+document.getElementById('copy').onclick=function(){
+  var t=document.getElementById('out').textContent;
+  if(!t||t.length<15){toast("먼저 답글을 만드세요");return;}
+  navigator.clipboard.writeText(t).then(function(){toast("복사됐어요 📋");},function(){
+    var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast("복사됐어요 📋");});
+};
+</script>
+</body>
+</html>

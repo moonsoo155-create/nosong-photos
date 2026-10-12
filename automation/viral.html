@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ff3d6e">
+<title>바이럴 변환기 · NOSONG</title>
+<style>
+  :root{--brand:#ff3d6e; --brand2:#ff6a95; --bg:#fff5f8; --card:#fff;
+    --ink:#2a1420; --sub:#8a5a6c; --line:#f6d9e2;}
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#160b10; --card:#221119; --ink:#f8e6ee; --sub:#c98aa2; --line:#3a1e2a;}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;}
+  .top{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .top a{color:#fff;text-decoration:none;font-size:20px;} .top h1{margin:0;font-size:17px;font-weight:800;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+  label{display:block;font-size:13px;font-weight:700;color:var(--sub);margin:12px 0 6px;} label:first-child{margin-top:0;}
+  input,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);font-size:15px;font-family:inherit;}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg button{flex:1;min-width:80px;padding:11px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;font-size:13.5px;font-weight:700;cursor:pointer;}
+  .seg button.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .btn{width:100%;padding:15px;border:none;border-radius:13px;font-size:16px;font-weight:800;cursor:pointer;background:var(--brand);color:#fff;}
+  .post{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;}
+  .post .ptype{font-size:11px;font-weight:800;color:var(--brand);letter-spacing:.5px;margin-bottom:7px;}
+  .post .ptext{white-space:pre-wrap;font-size:15px;line-height:1.7;}
+  .post .pcopy{margin-top:10px;font-size:13px;font-weight:700;color:var(--brand);background:none;border:1.5px solid var(--brand);border-radius:999px;padding:6px 14px;cursor:pointer;}
+  .hint{font-size:12px;color:var(--sub);margin-top:8px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2a1420;color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;z-index:9;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">←</a><h1>🚀 바이럴 변환기</h1></div>
+<div class="wrap">
+  <div class="card">
+    <label>숙소</label>
+    <div class="seg" id="segHouse">
+      <button data-h="mansion" class="on">노송맨숀</button>
+      <button data-h="villa">노송별장</button>
+    </div>
+    <label>플랫폼</label>
+    <div class="seg" id="segPlat">
+      <button data-p="threads" class="on">쓰레드</button>
+      <button data-p="insta">인스타</button>
+      <button data-p="short">숏폼 자막</button>
+    </div>
+    <label>무슨 내용을 올릴까요? <span style="font-weight:500;color:var(--sub)">(한 줄 소재)</span></label>
+    <input id="topic" placeholder="예: 비 오는 날 구옥 창가에서 커피 마시기">
+    <label>(선택) 강조 포인트</label>
+    <input id="point" placeholder="예: 전주 감성, 커플 여행">
+  </div>
+
+  <button class="btn" id="gen">후킹 문구 10개 뽑기 🔥</button>
+
+  <div id="results"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var HOUSE={
+ mansion:{name:"노송맨숀",tag:["전주여행","전주숙소","전주감성숙소","노송맨숀","전주한옥마을","커플여행"],
+   persona:"감성·구옥·어른의 쉼"},
+ villa:{name:"노송별장",tag:["전주여행","전주키즈펜션","아이와여행","노송별장","전주가족여행","트램폴린"],
+   persona:"아이·가족·놀거리"}};
+var state={house:"mansion",plat:"threads"};
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function v(id){return (document.getElementById(id).value||"").trim();}
+
+/* 후킹 패턴 10종 */
+function patterns(topic,point,h){
+  var P=point?(" "+point):"";
+  return [
+   {t:"호기심 질문형", s:"전주에서 "+topic+", 해보신 적 있으세요?\n\n저는 요즘 여기서 이걸로 하루를 시작해요."},
+   {t:"반전/고백형", s:"솔직히 처음엔 별거 아니라고 생각했어요.\n\n근데 "+topic+" 한 번 해보고 생각이 바뀌었습니다."},
+   {t:"숫자/리스트형", s:"전주 오면 꼭 해야 할 것 3가지\n\n1. "+topic+"\n2. 천천히 걷기\n3. 아무것도 안 하기"},
+   {t:"공감 저격형", s:"여행 가서도 쉬는 게 아니라 더 피곤했던 분들께.\n\n"+topic+", 이거 하나면 충분하더라고요."},
+   {t:"비밀 공유형", s:"아는 사람만 아는 전주 즐기는 법.\n\n"+topic+"."+P},
+   {t:"장면 묘사형", s:""+topic+".\n\n그 순간만큼은 시간이 멈춘 것 같았어요."+P},
+   {t:"후회 방지형", s:"이거 모르고 전주 다녀오면 진짜 아쉬워요.\n\n바로 "+topic+"."},
+   {t:"대조형", s:"비싼 호텔 말고요.\n\n저는 전주에서 "+topic+" 할 수 있는 이곳이 더 좋더라고요."},
+   {t:"호스트 시점", s:"숙소 운영하면서 게스트분들이 제일 좋아하시는 순간.\n\n바로 "+topic+"이에요."},
+   {t:"초대형", s:""+topic+" 하러, 전주로 오세요.\n\n"+h.name+"에서 기다릴게요 🌿"}
+  ];
+}
+function hashtags(h){ return h.tag.map(function(t){return "#"+t;}).join(" "); }
+
+function render(){
+  var h=HOUSE[state.house], topic=v('topic')||"느리게 쉬기", point=v('point');
+  var list=patterns(topic,point,h);
+  var box=document.getElementById('results'); box.innerHTML="";
+  list.forEach(function(p){
+    var text=p.s;
+    if(state.plat==="threads") text += "\n\n"+hashtags(h);
+    else if(state.plat==="insta") text += "\n.\n.\n"+hashtags(h);
+    // short: 자막용 — 해시태그 없이 짧게, 줄단위
+    else text = p.s.replace(/\n\n/g,"\n");
+    var el=document.createElement('div');el.className="card";el.style.marginBottom="0";
+    var wrap=document.createElement('div');wrap.className="post";wrap.style.margin="0";wrap.style.border="none";wrap.style.padding="0";wrap.style.background="none";
+    wrap.innerHTML='<div class="ptype">'+p.t+'</div><div class="ptext"></div>';
+    wrap.querySelector('.ptext').textContent=text;
+    var b=document.createElement('button');b.className="pcopy";b.textContent="복사 📋";
+    b.onclick=function(){navigator.clipboard.writeText(text).then(function(){toast("복사됐어요 📋");},function(){
+      var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast("복사됐어요 📋");});};
+    wrap.appendChild(b); el.appendChild(wrap); box.appendChild(el);
+  });
+}
+function segBind(id,key){document.getElementById(id).addEventListener('click',function(e){
+  if(e.target.tagName!=='BUTTON')return;[].forEach.call(this.children,function(b){b.classList.remove('on');});
+  e.target.classList.add('on');state[key]=e.target.dataset.h||e.target.dataset.p;});}
+segBind('segHouse','house'); segBind('segPlat','plat');
+document.getElementById('gen').onclick=render;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1500);}
+</script>
+</body>
+</html>

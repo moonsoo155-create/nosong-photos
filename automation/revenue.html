@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f8ca6">
+<title>매출 관리 · NOSONG</title>
+<style>
+  :root{--brand:#1f8ca6; --brand2:#39c0c9; --bg:#f1fafb; --card:#fff;
+    --ink:#15262a; --sub:#5b7278; --line:#d6ebee; --in:#1aa65a; --out:#e0533a;}
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0b1618; --card:#132226; --ink:#e9f5f7; --sub:#92aeb4; --line:#243b40;}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.5;}
+  .top{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .top a{color:#fff;text-decoration:none;font-size:20px;} .top h1{margin:0;font-size:17px;font-weight:800;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+  label{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:10px 0 5px;}
+  input,select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:15px;font-family:inherit;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .seg{display:flex;gap:8px;}
+  .seg button{flex:1;padding:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;}
+  .seg button.on{color:#fff;}
+  .seg button.in.on{background:var(--in);border-color:var(--in);}
+  .seg button.out.on{background:var(--out);border-color:var(--out);}
+  .btn{width:100%;padding:13px;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;background:var(--brand);color:#fff;}
+  .btn.sec{background:var(--card);color:var(--brand);border:1.5px solid var(--brand);}
+  .sum{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;}
+  .stat .t{font-size:11px;color:var(--sub);font-weight:700;}
+  .stat .n{font-size:20px;font-weight:900;margin-top:3px;}
+  .n.in{color:var(--in);} .n.out{color:var(--out);} .n.net{color:var(--brand);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;}
+  th{color:var(--sub);font-size:11px;}
+  td.amt{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;}
+  .del{color:var(--out);cursor:pointer;font-weight:800;border:none;background:none;font-size:15px;}
+  .barwrap{display:flex;align-items:flex-end;gap:8px;height:120px;margin-top:8px;}
+  .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;}
+  .bar .b{width:70%;background:var(--brand);border-radius:6px 6px 0 0;min-height:2px;}
+  .bar .l{font-size:10px;color:var(--sub);}
+  .empty{text-align:center;color:var(--sub);padding:20px;font-size:14px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#15262a;color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;z-index:9;}
+  .toast.show{opacity:1;}
+  .fee{font-size:11px;color:var(--sub);margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">←</a><h1>💰 매출 관리</h1></div>
+<div class="wrap">
+
+  <div class="card">
+    <div class="seg" id="segType" style="margin-bottom:4px;">
+      <button class="in on" data-t="수입">＋ 수입</button>
+      <button class="out" data-t="지출">－ 지출</button>
+    </div>
+    <div class="grid2">
+      <div><label>날짜</label><input type="date" id="date"></div>
+      <div><label>숙소</label>
+        <select id="house"><option>노송맨숀</option><option>노송별장</option><option>공통</option></select></div>
+    </div>
+    <div class="grid2">
+      <div><label>채널 / 분류</label>
+        <select id="chan">
+          <option>에어비앤비</option><option>네이버예약</option><option>직접예약</option>
+          <option>청소/소모품</option><option>수리/관리</option><option>공과금</option><option>기타</option>
+        </select></div>
+      <div><label>금액(원)</label><input type="number" id="amount" inputmode="numeric" placeholder="예: 150000"></div>
+    </div>
+    <div class="fee" id="feeNote"></div>
+    <label>메모 (게스트명/항목)</label>
+    <input id="memo" placeholder="예: 김민수 1박 / 휴지·세제 구매">
+    <button class="btn" id="add" style="margin-top:12px;">기록 추가</button>
+  </div>
+
+  <div class="card">
+    <div class="grid2" style="margin-bottom:10px;">
+      <div><label>조회 월</label><input type="month" id="fmonth"></div>
+      <div><label>숙소 필터</label>
+        <select id="fhouse"><option value="">전체</option><option>노송맨숀</option><option>노송별장</option><option>공통</option></select></div>
+    </div>
+    <div class="sum">
+      <div class="stat"><div class="t">총 수입(수수료 차감 후)</div><div class="n in" id="sIn">0원</div></div>
+      <div class="stat"><div class="t">채널 수수료</div><div class="n out" id="sFee">0원</div></div>
+      <div class="stat"><div class="t">총 지출</div><div class="n out" id="sOut">0원</div></div>
+      <div class="stat"><div class="t">순수익</div><div class="n net" id="sNet">0원</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;color:var(--sub);margin-bottom:6px;">최근 6개월 순수익</div>
+    <div class="barwrap" id="chart"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-size:13px;font-weight:700;color:var(--sub)">내역</span>
+      <button class="btn sec" id="csv" style="width:auto;padding:7px 12px;font-size:13px;">CSV 내보내기</button>
+    </div>
+    <div id="listBox"></div>
+  </div>
+
+  <button class="btn sec" id="wipe" style="color:var(--out);border-color:var(--out);">전체 기록 삭제</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var KEY="nosong_revenue_v1", FKEY="nosong_revenue_fee";
+var FEE={ "에어비앤비":3.0, "네이버예약":3.5, "직접예약":0 }; // %
+try{var f=JSON.parse(localStorage.getItem(FKEY)||"null"); if(f)FEE=f;}catch(e){}
+var ttype="수입";
+function won(n){return (n||0).toLocaleString('ko-KR')+"원";}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]");}catch(e){return [];}}
+function save(a){localStorage.setItem(KEY,JSON.stringify(a));}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1500);}
+
+/* 수수료 미리보기 */
+function updFee(){
+  var chan=document.getElementById('chan').value, amt=+document.getElementById('amount').value||0;
+  var el=document.getElementById('feeNote');
+  if(ttype==="수입" && FEE[chan]!==undefined && FEE[chan]>0 && amt>0){
+    var fee=Math.round(amt*FEE[chan]/100);
+    el.textContent="↳ "+chan+" 수수료 "+FEE[chan]+"% = "+won(fee)+" 차감 → 실수령 "+won(amt-fee);
+  } else el.textContent="";
+}
+['chan','amount'].forEach(function(id){document.getElementById(id).addEventListener('input',updFee);});
+
+document.getElementById('segType').addEventListener('click',function(e){
+  if(e.target.tagName!=='BUTTON')return;
+  [].forEach.call(this.children,function(b){b.classList.remove('on');});
+  e.target.classList.add('on'); ttype=e.target.dataset.t;
+  // 채널 옵션 관련 없지만 수수료 미리보기 갱신
+  updFee();
+});
+
+document.getElementById('add').onclick=function(){
+  var amt=+document.getElementById('amount').value||0;
+  var date=document.getElementById('date').value;
+  if(!date){toast("날짜를 넣어주세요");return;}
+  if(amt<=0){toast("금액을 넣어주세요");return;}
+  var chan=document.getElementById('chan').value;
+  var fee = (ttype==="수입" && FEE[chan]>0) ? Math.round(amt*FEE[chan]/100) : 0;
+  var rec={id:Date.now(),date:date,house:document.getElementById('house').value,
+    type:ttype,chan:chan,amount:amt,fee:fee,memo:document.getElementById('memo').value.trim()};
+  var a=load();a.push(rec);save(a);
+  document.getElementById('amount').value="";document.getElementById('memo').value="";updFee();
+  toast("추가됐어요 ✅");render();
+};
+
+function filtered(){
+  var m=document.getElementById('fmonth').value, hh=document.getElementById('fhouse').value;
+  return load().filter(function(r){
+    if(m && r.date.slice(0,7)!==m) return false;
+    if(hh && r.house!==hh) return false;
+    return true;
+  }).sort(function(a,b){return b.date<a.date?-1:1;});
+}
+function render(){
+  var rows=filtered();
+  var sIn=0,sFee=0,sOut=0;
+  rows.forEach(function(r){
+    if(r.type==="수입"){sIn+=(r.amount-r.fee);sFee+=r.fee;} else sOut+=r.amount;
+  });
+  document.getElementById('sIn').textContent=won(sIn);
+  document.getElementById('sFee').textContent=won(sFee);
+  document.getElementById('sOut').textContent=won(sOut);
+  document.getElementById('sNet').textContent=won(sIn-sOut);
+
+  var box=document.getElementById('listBox');
+  if(rows.length===0){box.innerHTML='<div class="empty">해당 조건의 기록이 없어요.</div>';}
+  else{
+    var h='<table><tr><th>날짜</th><th>내용</th><th style="text-align:right">금액</th><th></th></tr>';
+    rows.forEach(function(r){
+      var sign=r.type==="수입"?"+":"−";
+      var col=r.type==="수입"?"var(--in)":"var(--out)";
+      var disp=r.type==="수입"?(r.amount-r.fee):r.amount;
+      var sub=r.house+" · "+r.chan+(r.memo?(" · "+r.memo):"")+(r.fee?(" (수수료 "+won(r.fee)+")"):"");
+      h+='<tr><td>'+r.date.slice(5)+'</td><td>'+esc(sub)+
+         '</td><td class="amt" style="color:'+col+'">'+sign+won(disp)+
+         '</td><td><button class="del" data-id="'+r.id+'">✕</button></td></tr>';
+    });
+    h+='</table>';box.innerHTML=h;
+    [].forEach.call(box.querySelectorAll('.del'),function(b){
+      b.onclick=function(){var id=+b.dataset.id;save(load().filter(function(r){return r.id!==id;}));render();toast("삭제됨");};
+    });
+  }
+  renderChart();
+}
+function esc(s){return (s+"").replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];});}
+
+function renderChart(){
+  var hh=document.getElementById('fhouse').value;
+  var all=load().filter(function(r){return !hh||r.house===hh;});
+  var months=[];var now=new Date();
+  for(var i=5;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push(d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2));}
+  var nets=months.map(function(m){
+    var inc=0,out=0;
+    all.forEach(function(r){if(r.date.slice(0,7)===m){if(r.type==="수입")inc+=(r.amount-r.fee);else out+=r.amount;}});
+    return inc-out;
+  });
+  var max=Math.max.apply(null,nets.map(Math.abs).concat([1]));
+  var box=document.getElementById('chart');box.innerHTML="";
+  months.forEach(function(m,i){
+    var v=nets[i];var hpct=Math.round(Math.abs(v)/max*96);
+    var d=document.createElement('div');d.className="bar";
+    var label=(v>=1000000?(Math.round(v/10000)+"만"):(v!==0?Math.round(v/10000)+"만":"0"));
+    d.innerHTML='<div style="font-size:9px;color:var(--sub)">'+label+'</div>'+
+      '<div class="b" style="height:'+hpct+'%;background:'+(v<0?'var(--out)':'var(--brand)')+'"></div>'+
+      '<div class="l">'+m.slice(5)+'월</div>';
+    box.appendChild(d);
+  });
+}
+
+document.getElementById('csv').onclick=function(){
+  var rows=filtered();if(!rows.length){toast("내보낼 내역이 없어요");return;}
+  var head="날짜,숙소,유형,채널/분류,금액,수수료,실금액,메모\n";
+  var body=rows.map(function(r){
+    var real=r.type==="수입"?(r.amount-r.fee):r.amount;
+    return [r.date,r.house,r.type,r.chan,r.amount,r.fee,real,'"'+(r.memo||"").replace(/"/g,'""')+'"'].join(",");
+  }).join("\n");
+  var blob=new Blob(["﻿"+head+body],{type:"text/csv;charset=utf-8"});
+  var url=URL.createObjectURL(blob);var a=document.createElement('a');
+  a.href=url;a.download="노송_매출_"+(document.getElementById('fmonth').value||"전체")+".csv";
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);toast("CSV 저장됨 📄");
+};
+document.getElementById('wipe').onclick=function(){
+  if(confirm("모든 매출 기록을 삭제할까요? 되돌릴 수 없습니다.")){save([]);render();toast("전체 삭제됨");}
+};
+
+/* init */
+(function(){
+  var d=new Date();var ym=d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2);
+  document.getElementById('date').value=ym+"-"+("0"+d.getDate()).slice(-2);
+  document.getElementById('fmonth').value=ym;
+  ['fmonth','fhouse'].forEach(function(id){document.getElementById(id).addEventListener('change',render);});
+  render();
+})();
+</script>
+</body>
+</html>

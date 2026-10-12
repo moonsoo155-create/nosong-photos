@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ff6a3d">
+<title>가격 계산기 · NOSONG</title>
+<style>
+  :root{--brand:#ff6a3d; --brand2:#ff9a5a; --bg:#fff6f1; --card:#fff;
+    --ink:#2a1a12; --sub:#80604f; --line:#f3ddd0; --ok:#1aa65a;}
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#160d08; --card:#221710; --ink:#f6e9e0; --sub:#c49a84; --line:#3a2718;}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;}
+  .top{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .top a{color:#fff;text-decoration:none;font-size:20px;} .top h1{margin:0;font-size:17px;font-weight:800;}
+  .wrap{max-width:560px;margin:0 auto;padding:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+  label{display:block;font-size:12px;font-weight:700;color:var(--sub);margin:12px 0 5px;} label:first-child{margin-top:0;}
+  input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);font-size:15px;font-family:inherit;}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg button{flex:1;min-width:70px;padding:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;font-weight:700;cursor:pointer;font-size:13.5px;}
+  .seg button.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .result{background:linear-gradient(135deg,#fff3ec,#ffe6d8);border:1px solid var(--line);border-radius:14px;padding:16px;}
+  @media (prefers-color-scheme:dark){.result{background:linear-gradient(135deg,#2a1a10,#2e2013);}}
+  .result .big{font-size:30px;font-weight:900;color:var(--brand);}
+  .line{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px dashed var(--line);}
+  .line:last-child{border:none;}
+  .line b{font-variant-numeric:tabular-nums;}
+  .net{color:var(--ok);font-weight:800;}
+  .tabs{display:flex;gap:8px;margin-bottom:14px;}
+  .tabs button{flex:1;padding:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;font-weight:800;cursor:pointer;}
+  .tabs button.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .hint{font-size:12px;color:var(--sub);margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">←</a><h1>🧮 가격 계산기</h1></div>
+<div class="wrap">
+
+  <div class="tabs">
+    <button class="on" data-tab="fwd" id="tFwd">판매가 → 실수령</button>
+    <button data-tab="rev" id="tRev">목표수령 → 판매가</button>
+  </div>
+
+  <div class="card">
+    <label>숙소</label>
+    <div class="seg" id="segHouse">
+      <button data-h="mansion" class="on">노송맨숀</button>
+      <button data-h="villa">노송별장</button>
+    </div>
+    <label>채널</label>
+    <div class="seg" id="segChan">
+      <button data-c="3.0" class="on">에어비앤비 3%</button>
+      <button data-c="3.5">네이버 3.5%</button>
+      <button data-c="0">직접예약 0%</button>
+    </div>
+
+    <div id="fwdBox">
+      <label>1박 기본 판매가(원)</label>
+      <input type="number" id="base" inputmode="numeric" value="150000">
+    </div>
+    <div id="revBox" style="display:none;">
+      <label>1박 목표 실수령액(원)</label>
+      <input type="number" id="target" inputmode="numeric" value="150000">
+    </div>
+
+    <div class="grid2">
+      <div><label>요일</label>
+        <select id="day"><option value="1">평일</option><option value="1.2">주말(+20%)</option><option value="1.4">성수기/연휴(+40%)</option></select></div>
+      <div><label>숙박 일수</label><input type="number" id="nights" inputmode="numeric" value="1"></div>
+    </div>
+    <div class="grid2">
+      <div><label>기준 인원 초과(명)</label><input type="number" id="extra" inputmode="numeric" value="0"></div>
+      <div><label>1인 추가요금(원)</label><input type="number" id="extraFee" inputmode="numeric" value="20000"></div>
+    </div>
+    <label>청소비(원, 선택)</label>
+    <input type="number" id="clean" inputmode="numeric" value="0">
+  </div>
+
+  <div class="card">
+    <div class="result" id="result"></div>
+    <div class="hint">※ 수수료율은 채널 정책에 따라 달라질 수 있어요. 실제 정산 금액과 다르면 채널 버튼 아래 숫자를 참고해 맞춰 보세요.
+    부가세·소득세는 별도입니다.</div>
+  </div>
+</div>
+
+<script>
+var mode="fwd";
+var opt={house:"mansion",fee:3.0};
+function won(n){return Math.round(n).toLocaleString('ko-KR')+"원";}
+function num(id){return +document.getElementById(id).value||0;}
+
+document.querySelectorAll('.tabs button').forEach(function(b){
+  b.onclick=function(){document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');mode=b.dataset.tab;
+    document.getElementById('fwdBox').style.display=mode==="fwd"?"":"none";
+    document.getElementById('revBox').style.display=mode==="rev"?"":"none";calc();};
+});
+function segBind(id,key,isFee){document.getElementById(id).addEventListener('click',function(e){
+  if(e.target.tagName!=='BUTTON')return;[].forEach.call(this.children,function(b){b.classList.remove('on');});
+  e.target.classList.add('on');opt[key]=isFee?parseFloat(e.target.dataset.c):e.target.dataset.h;calc();});}
+segBind('segHouse','house',false); segBind('segChan','fee',true);
+['base','target','day','nights','extra','extraFee','clean'].forEach(function(id){
+  document.getElementById(id).addEventListener('input',calc);});
+
+function calc(){
+  var day=parseFloat(document.getElementById('day').value)||1;
+  var nights=num('nights')||1;
+  var extraTotal=num('extra')*num('extraFee')*nights;
+  var clean=num('clean');
+  var feeRate=opt.fee/100;
+  var r=document.getElementById('result');
+
+  if(mode==="fwd"){
+    var perNight=num('base')*day;
+    var gross=perNight*nights+extraTotal+clean;
+    var fee=gross*feeRate;
+    var net=gross-fee;
+    r.innerHTML=
+      '<div style="font-size:12px;color:var(--sub);font-weight:700">게스트 결제 금액</div>'+
+      '<div class="big">'+won(gross)+'</div>'+
+      '<div style="margin-top:12px">'+
+      row("1박 기본가 × 요일배율",won(perNight))+
+      row(nights+"박 숙박료",won(perNight*nights))+
+      (extraTotal?row("인원 추가요금",won(extraTotal)):"")+
+      (clean?row("청소비",won(clean)):"")+
+      row("채널 수수료 ("+opt.fee+"%)","−"+won(fee))+
+      '<div class="line"><span class="net">내 실수령액</span><b class="net">'+won(net)+'</b></div>'+
+      '</div>';
+  } else {
+    // 목표 실수령 역산: net = gross*(1-feeRate) → gross = net/(1-feeRate)
+    var targetNet=num('target');
+    // 추가요금/청소비도 수수료 대상으로 가정, 목표는 '순수 숙박 실수령'
+    var grossNeeded = feeRate<1 ? targetNet/(1-feeRate) : targetNet;
+    // 요일/추가 반영하여 '기본 판매가' 역산
+    var extraNet = extraTotal*(1-feeRate);
+    var baseGross = (targetNet/(1-feeRate)); // 숙박분 gross
+    var perNightBase = (baseGross/nights)/day;
+    r.innerHTML=
+      '<div style="font-size:12px;color:var(--sub);font-weight:700">책정해야 할 1박 판매가</div>'+
+      '<div class="big">'+won(perNightBase)+'</div>'+
+      '<div style="margin-top:12px">'+
+      row("목표 실수령("+nights+"박 합계)",won(targetNet))+
+      row("필요한 게스트 결제액",won(grossNeeded))+
+      row("요일 배율",("×"+day))+
+      row("채널 수수료 ("+opt.fee+"%)",won(grossNeeded-targetNet))+
+      '<div class="line"><span class="net">→ 등록할 1박 가격</span><b class="net">'+won(perNightBase)+'</b></div>'+
+      '</div>';
+  }
+}
+function row(l,v){return '<div class="line"><span>'+l+'</span><b>'+v+'</b></div>';}
+calc();
+</script>
+</body>
+</html>
