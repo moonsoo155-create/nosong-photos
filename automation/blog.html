@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b4fd0">
+<title>블로그 작성기 · NOSONG</title>
+<style>
+  :root{--brand:#2b4fd0; --brand2:#4a7bf7; --bg:#f4f6fb; --card:#fff;
+    --ink:#1a2230; --sub:#5b6577; --line:#e3e8f0; --ok:#1aa65a;}
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0f141c; --card:#19212e; --ink:#eef2f8; --sub:#9aa6b8; --line:#2a3545;}
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;}
+  .top{position:sticky;top:0;z-index:5;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .top a{color:#fff;text-decoration:none;font-size:20px;}
+  .top h1{margin:0;font-size:17px;font-weight:800;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:16px;margin-bottom:14px;}
+  label{display:block;font-size:13px;font-weight:700;color:var(--sub);margin:12px 0 6px;}
+  label:first-child{margin-top:0;}
+  input[type=text],textarea,select{width:100%;padding:11px 12px;border:1px solid var(--line);
+    border-radius:11px;background:var(--bg);color:var(--ink);font-size:15px;font-family:inherit;}
+  textarea{min-height:70px;resize:vertical;}
+  .seg{display:flex;gap:8px;}
+  .seg button{flex:1;padding:12px;border:1.5px solid var(--line);background:var(--bg);
+    color:var(--ink);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;}
+  .seg button.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{padding:8px 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--bg);
+    font-size:13px;font-weight:600;cursor:pointer;user-select:none;}
+  .chip.on{background:#e8efff;border-color:var(--brand);color:var(--brand);}
+  @media (prefers-color-scheme:dark){.chip.on{background:#24314d;}}
+  .presets{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px;}
+  .presets .chip{font-size:12px;padding:6px 10px;}
+  .btn{width:100%;padding:15px;border:none;border-radius:13px;font-size:16px;font-weight:800;
+    cursor:pointer;background:var(--brand);color:#fff;margin-top:4px;}
+  .btn.sec{background:var(--card);color:var(--brand);border:1.5px solid var(--brand);}
+  .row{display:flex;gap:10px;}
+  .row>*{flex:1;}
+  .out{white-space:pre-wrap;word-break:break-word;font-size:14.5px;line-height:1.8;
+    background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:14px;min-height:60px;}
+  .meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sub);margin-bottom:8px;}
+  .count.warn{color:#e0803a;font-weight:700;}
+  .count.good{color:var(--ok);font-weight:700;}
+  .hint{font-size:12px;color:var(--sub);margin-top:6px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a2230;
+    color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;z-index:9;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="top"><a href="index.html">←</a><h1>📝 네이버 블로그 작성기</h1></div>
+<div class="wrap">
+
+  <div class="card">
+    <label>어느 숙소 글인가요?</label>
+    <div class="seg" id="segHouse">
+      <button data-h="mansion" class="on">노송맨숀 (감성·성인)</button>
+      <button data-h="villa">노송별장 (가족·키즈)</button>
+    </div>
+
+    <label>검색 의도 / 글 주제 <span style="font-weight:500;color:var(--sub)">(한 글=검색의도 하나)</span></label>
+    <input type="text" id="topic" placeholder="예: 전주 한옥마을 근처 감성 숙소">
+    <div class="presets" id="presets"></div>
+
+    <label>핵심 검색 키워드 <span style="font-weight:500;color:var(--sub)">(쉼표로 구분)</span></label>
+    <input type="text" id="keywords" placeholder="예: 전주여행, 전주숙소추천, 한옥스테이">
+
+    <label>계절 / 시즌</label>
+    <div class="seg" id="segSeason">
+      <button data-s="봄" >봄</button>
+      <button data-s="여름">여름</button>
+      <button data-s="가을" class="on">가을</button>
+      <button data-s="겨울">겨울</button>
+    </div>
+
+    <label>강조할 특징 <span style="font-weight:500;color:var(--sub)">(여러 개 선택)</span></label>
+    <div class="chips" id="features"></div>
+
+    <label>마무리 한 줄 <span style="font-weight:500;color:var(--sub)">(비워도 됨)</span></label>
+    <input type="text" id="closer" placeholder="예: 소중한 분과 전주에서 좋은 하루 보내세요">
+  </div>
+
+  <div class="row" style="margin-bottom:14px;">
+    <button class="btn" id="gen">초안 생성 ✍️</button>
+    <button class="btn sec" id="regen">다른 문장으로 🔁</button>
+  </div>
+
+  <div class="card">
+    <div class="meta">
+      <span>생성된 초안</span>
+      <span id="count" class="count">0자</span>
+    </div>
+    <div class="out" id="out">위 내용을 채우고 '초안 생성'을 누르면 여기에 글이 나옵니다.</div>
+    <div class="row" style="margin-top:12px;">
+      <button class="btn" id="copy">전체 복사 📋</button>
+      <button class="btn sec" id="clear">지우기</button>
+    </div>
+    <div class="hint">※ 네이버 스마트에디터 모바일에 그대로 붙여넣기 → 사진만 문단 사이에 넣으면 끝.
+    목표 글자수 2,000~3,000자. 생성 후 사장님 목소리로 1~2문장 손보면 더 자연스러워요.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- 데이터 ---------- */
+var HOUSE = {
+  mansion: {
+    name:"노송맨숀",
+    vibe:"감성·빈티지·구옥, 성인 여행객을 위한",
+    cap:"최대 6인",
+    presets:["전주 한옥마을 근처 감성 숙소","전주 커플 여행 숙소 추천",
+      "전주 빈티지 구옥 스테이","전주 감성 사진 숙소","전주 단체 모임 숙소(6인)"],
+    features:[
+      ["빈티지 구옥","오래된 구옥을 감성적으로 살린 공간"],
+      ["감성 인테리어","사진 찍는 곳마다 그림이 되는 소품과 조명"],
+      ["성인 취향","조용하고 프라이빗하게, 어른들의 쉼에 맞춘"],
+      ["최대 6인","친구·커플·소모임까지 넉넉한"],
+      ["전주한옥마을 근처","한옥마을·객리단길까지 가까운 위치"],
+      ["감성 사진 스팟","인생샷 남기기 좋은 포토존"],
+      ["주차 가능","차 가져오셔도 편한"],
+      ["조용한 동네","밤에도 푹 쉬기 좋은 한적한 골목"]
+    ],
+    tone:["혼자만 알고 싶은","오래 머무르고 싶은","시간이 천천히 흐르는"]
+  },
+  villa: {
+    name:"노송별장",
+    vibe:"아이와 함께하는 가족 여행에 맞춘",
+    cap:"최대 4인",
+    presets:["전주 키즈 펜션 추천","전주 아이와 가족여행 숙소",
+      "트램폴린 있는 전주 숙소","전주 놀이방 숙소","전주 가족 단독 숙소"],
+    features:[
+      ["키즈 놀이방","아이들이 마음껏 노는 실내 놀이방"],
+      ["트램폴린","아이들이 제일 좋아하는 트램폴린"],
+      ["가족 전용","우리 가족만 쓰는 독채라 눈치 볼 일 없는"],
+      ["최대 4인","부모와 아이 가족 단위에 딱 맞는"],
+      ["안전한 구조","아이 안전을 생각한 동선과 구조"],
+      ["주차 가능","짐 많은 가족도 편한 주차"],
+      ["전주 근교 나들이","한옥마을·동물원 등 아이와 갈 곳 가까운"],
+      ["아늑한 거실","온 가족이 둘러앉는 거실"]
+    ],
+    tone:["아이가 더 신나하는","온 가족이 웃는","부모가 한숨 돌릴 수 있는"]
+  }
+};
+var SEASON = {
+  "봄":"벚꽃이 피기 시작하는 봄",
+  "여름":"초록이 짙어지는 여름",
+  "가을":"단풍이 물드는 가을",
+  "겨울":"공기가 맑은 겨울"
+};
+
+/* ---------- 상태 ---------- */
+var state={house:"mansion",season:"가을",features:[]};
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+
+/* ---------- UI 렌더 ---------- */
+function renderHouse(){
+  var h=HOUSE[state.house];
+  var ps=document.getElementById('presets'); ps.innerHTML="";
+  h.presets.forEach(function(p){
+    var c=document.createElement('span');c.className="chip";c.textContent=p;
+    c.onclick=function(){document.getElementById('topic').value=p;};
+    ps.appendChild(c);
+  });
+  var ft=document.getElementById('features'); ft.innerHTML=""; state.features=[];
+  h.features.forEach(function(f,i){
+    var c=document.createElement('span');c.className="chip";c.textContent=f[0];c.dataset.i=i;
+    c.onclick=function(){c.classList.toggle('on');
+      var idx=parseInt(c.dataset.i);
+      var at=state.features.indexOf(idx);
+      if(at<0)state.features.push(idx); else state.features.splice(at,1);
+    };
+    if(i<5){c.classList.add('on');state.features.push(i);}
+    ft.appendChild(c);
+  });
+}
+document.getElementById('segHouse').addEventListener('click',function(e){
+  if(e.target.tagName!=='BUTTON')return;
+  [].forEach.call(this.children,function(b){b.classList.remove('on');});
+  e.target.classList.add('on'); state.house=e.target.dataset.h; renderHouse();
+});
+document.getElementById('segSeason').addEventListener('click',function(e){
+  if(e.target.tagName!=='BUTTON')return;
+  [].forEach.call(this.children,function(b){b.classList.remove('on');});
+  e.target.classList.add('on'); state.season=e.target.dataset.s;
+});
+
+/* ---------- 글 생성 ---------- */
+function build(){
+  var h=HOUSE[state.house];
+  var topic=(document.getElementById('topic').value||h.presets[0]).trim();
+  var kws=document.getElementById('keywords').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var closer=document.getElementById('closer').value.trim();
+  var feats=state.features.map(function(i){return h.features[i];});
+  if(feats.length===0)feats=h.features.slice(0,3);
+  var seasonTxt=SEASON[state.season];
+  var LINE="━━━━━━━━━━━━━━━";
+
+  var intro=[
+    "안녕하세요, 전주에서 "+h.name+"을 직접 운영하고 있는 호스트입니다.",
+    pick([seasonTxt+", 전주로 여행 떠나기 딱 좋은 계절이 돌아왔어요.",
+          "요즘 전주 여행을 계획하시는 분들이 부쩍 많아지셨더라고요.",
+          "오늘은 저희 "+h.name+" 이야기를 차근차근 들려드리려고 합니다."]),
+    pick(["'"+topic+"' 검색해서 들어오셨다면, 아마 제대로 찾아오신 걸 거예요.",
+          "'"+topic+"'을 고민하고 계셨다면 이 글이 꽤 도움이 되실 거라 생각해요.",
+          "숙소를 고를 때 사진만으로는 감이 잘 안 오시죠. 그래서 사장 입장에서 솔직하게 하나하나 소개해 드릴게요."]),
+    pick(["저는 "+h.vibe+" 공간을 만들고 싶어서 이 숙소를 꾸렸어요. 그 마음이 글에서도 느껴지면 좋겠습니다.",
+          "숙소를 운영하면서 '어떻게 하면 더 편하게 쉬다 가실까'만 생각했어요. 그 고민의 결과를 보여드릴게요.",
+          "광고처럼 좋은 말만 늘어놓기보다, 실제로 어떤 공간인지 있는 그대로 적어볼게요."])
+  ].join("\n");
+
+  // 특징 섹션들 — 각 섹션 3~4문장으로 풍성하게
+  var detailBank=[
+    "처음 오신 분들이 꼭 한 번씩 사진으로 담아가시는 부분이기도 해요.",
+    "직접 머물러 보시면 왜 이걸 강조하는지 금방 느끼실 거예요.",
+    "운영하면서 게스트분들께 가장 반응이 좋았던 포인트랍니다.",
+    "작은 부분이지만 머무는 내내 기분을 은근히 좌우하더라고요.",
+    "여행지에서의 하루가 더 특별해지는 데 이만한 게 없더라고요."
+  ];
+  var careBank=[
+    "이 부분만큼은 매번 제 손으로 직접 점검하고 세팅합니다.",
+    "게스트분들이 신경 쓰지 않으셔도 되도록, 보이지 않는 곳까지 챙겨두었어요.",
+    "사진과 실제가 다르지 않도록 늘 같은 상태로 유지하려 노력하고 있어요.",
+    "혹시 불편한 점이 있으면 바로 말씀 주세요. 그 자리에서 해결해 드립니다."
+  ];
+  var secs=[];
+  feats.forEach(function(f){
+    var head="◆ "+f[0];
+    var body=f[1]+" 공간이에요. ";
+    body+=pick(detailBank)+" ";
+    body+=pick(careBank);
+    secs.push(head+"\n"+body);
+  });
+
+  // 하루 흐름(시간대) 섹션 — 분량과 감성 보강
+  var daySec="◆ 이곳에서의 하루는 이렇게 흘러가요\n";
+  daySec += (state.house==="mansion"
+    ? "체크인하고 짐을 풀면, 가장 먼저 창으로 들어오는 빛과 공간의 분위기에 마음이 놓이실 거예요. "+
+      "낮에는 근처 한옥마을과 골목을 천천히 둘러보고, 저녁엔 조용히 돌아와 좋아하는 음악 틀어두고 쉬기 좋아요. "+
+      "밤이 되면 동네가 한층 더 고요해져서, 하루의 소음을 내려놓기에 그만이랍니다."
+    : "체크인 후 아이들은 놀이방과 트램폴린으로 직행이에요. 그 사이 부모님은 잠깐 숨 돌리실 수 있고요. "+
+      "낮에는 가까운 나들이 코스를 다녀오고, 저녁엔 다 같이 거실에 둘러앉아 하루를 마무리하기 좋아요. "+
+      "아이가 실컷 놀고 곤히 잠든 뒤의 그 조용한 시간, 그게 가족 여행의 진짜 휴식이더라고요.");
+  secs.push(daySec);
+
+  // 준비해 둔 것들 (편의시설)
+  var amenCommon=["깨끗한 침구와 수건","드라이기·기본 세면도구","와이파이","냉난방","취사 가능한 주방","넉넉한 주차"];
+  var amenExtra = state.house==="mansion"
+    ? ["감성 조명·무드등","블루투스 스피커","커피·차 세트","인생샷 포토존"]
+    : ["아이 놀이방·장난감","트램폴린","아이 식기·보조용품","가족이 둘러앉는 거실"];
+  var amen="◆ 이런 것들을 준비해 두었어요\n";
+  amen += "오셔서 필요한 걸 따로 챙기지 않으셔도 되도록, 기본부터 꼼꼼히 갖춰 두었어요.\n";
+  amenCommon.concat(amenExtra).forEach(function(a){ amen += "· "+a+"\n"; });
+  amen += "그 외에 필요하신 게 있으면 미리 말씀해 주세요. 가능한 선에서 준비해 두겠습니다.";
+  secs.push(amen);
+
+  // 위치/주변
+  var around="◆ 위치와 주변\n";
+  around+=pick([
+    "전주 시내와 가까워 이동이 편하고, 한옥마을·객리단길 같은 핵심 코스까지 금방 닿습니다. ",
+    "차로도, 걸어서도 전주의 좋은 곳들을 둘러보기 좋은 자리예요. "
+  ])+pick([
+    "주차는 바로 앞에서 가능해서 짐이 많으셔도 걱정 없으세요. ",
+    "근처에 맛집과 카페도 많아서 동선 짜기 편하실 거예요. "
+  ])+pick([
+    "처음 전주 오시는 분들껜 어디부터 가면 좋은지 체크인하실 때 간단히 안내해 드리기도 해요.",
+    "제가 실제로 다녀보고 괜찮았던 동네 맛집은 미리 여쭤보시면 살짝 알려드릴게요."]);
+  secs.push(around);
+
+  // 어떤 분께 추천
+  var who="◆ 이런 분께 추천드려요\n";
+  who += (state.house==="mansion"
+    ? "조용하고 프라이빗한 공간에서 쉬고 싶은 커플, 친구, 소규모 모임("+h.cap+")께 특히 잘 맞아요. "+
+      "사진 찍는 걸 좋아하시는 분이라면 더더욱 만족하실 거고요. 번잡한 곳 말고 나만 아는 곳에서 조용히 쉬고 싶은 분께 추천드려요."
+    : "아이와 함께 눈치 보지 않고 편하게 쉬고 싶은 가족("+h.cap+")께 딱이에요. "+
+      "아이가 심심해하지 않을까 걱정이신 부모님, 호텔은 아이 챙기기 불편하셨던 분들께 특히 추천드려요. 우리 가족만 쓰는 독채라 마음이 훨씬 편하실 거예요.");
+  who += " "+pick(["특별한 날을 조금 더 특별하게 보내고 싶은 분들께도 좋아요.",
+    "일상에서 잠깐 벗어나 온전히 쉬어 가고 싶은 분들께요."]);
+  secs.push(who);
+
+  // 호스트 한마디
+  var hostNote="◆ 호스트 한마디\n";
+  hostNote+=pick([
+    "숙소는 결국 '머무는 시간'이 전부라고 생각해요. 그래서 저는 청소와 세팅 하나하나 제 손으로 챙깁니다. ",
+    "게스트 한 분 한 분이 편히 쉬다 가시는 게 제일 큰 보람이에요. 그래서 디테일을 놓치지 않으려 합니다. "
+  ])+pick(["화려하진 않아도, 오셨을 때 '아 편하다' 하고 느끼실 수 있는 공간을 만들고 싶었어요. ",
+    "제가 여행 다니며 아쉬웠던 점들을 하나씩 떠올리며 채워 넣은 공간이에요. "])+
+  pick(["작은 부분이라도 궁금하신 건 예약 전에 편하게 문의 주세요.",
+    "오시기 전 필요한 게 있으시면 미리 말씀 주시면 챙겨두겠습니다."]);
+  secs.push(hostNote);
+
+  // 예약 안내
+  var booking="◆ 예약 안내\n";
+  booking+="예약은 에어비앤비와 네이버 예약으로 받고 있어요. ";
+  booking+=pick(["성수기·주말은 일찍 마감되니 날짜 정해지면 서둘러 확인해 보시길 권해요. ",
+    "원하시는 날짜가 있으시면 미리 문의 주시는 걸 추천드려요. "]);
+  booking+=pick(["궁금한 점은 메시지로 물어보시면 최대한 빠르게 답변드리겠습니다.",
+    "날짜만 알려주시면 가능 여부를 바로 확인해 드릴게요."]);
+  secs.push(booking);
+
+  // 마무리
+  var ending = closer || pick([
+    (state.house==="mansion"?"소중한 분과 전주에서 느리게 흐르는 하루 보내시길 바랍니다.":
+      "온 가족이 전주에서 활짝 웃는 하루 보내시길 바랍니다."),
+    "저희 "+h.name+"에서 좋은 추억 만들고 가세요. 정성껏 준비해 두고 기다리겠습니다."
+  ]);
+
+  // 해시태그(키워드)
+  var tags = kws.length ? "\n\n"+kws.map(function(k){return "#"+k.replace(/\s+/g,'');}).join(" ") : "";
+  if(kws.length){
+    // 키워드를 본문에도 자연스럽게 한 번 녹여줌
+    intro += "\n\n"+pick(["",""])+ (kws[0]?("여행 준비하시면서 '"+kws[0]+"' 같은 키워드로 많이 찾아보시죠. 저희도 그 기준에 맞게 준비해 두었습니다."):"");
+  }
+
+  var doc = intro + "\n\n"+LINE+"\n\n" + secs.join("\n\n"+LINE+"\n\n") + "\n\n"+LINE+"\n\n" + ending + tags;
+  return doc;
+}
+
+function show(txt){
+  var out=document.getElementById('out'); out.textContent=txt;
+  var n=txt.replace(/\s/g,'').length; // 공백 제외 글자수 기준(네이버 감안)
+  var full=txt.length;
+  var el=document.getElementById('count');
+  el.textContent=full+"자 (공백제외 "+n+"자)";
+  el.className="count "+(full>=2000&&full<=3200?"good":"warn");
+}
+document.getElementById('gen').onclick=function(){show(build());};
+document.getElementById('regen').onclick=function(){show(build());};
+document.getElementById('clear').onclick=function(){
+  document.getElementById('out').textContent="지웠습니다. 다시 생성해 보세요.";
+  document.getElementById('count').textContent="0자";
+};
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},1500);}
+document.getElementById('copy').onclick=function(){
+  var t=document.getElementById('out').textContent;
+  if(!t||t.length<20){toast("먼저 초안을 생성하세요");return;}
+  navigator.clipboard.writeText(t).then(function(){toast("복사됐어요 📋");},
+    function(){ // fallback
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');ta.remove();toast("복사됐어요 📋");});
+};
+renderHouse();
+</script>
+</body>
+</html>
